@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>頒獎配置台</title>
+<style>
+  :root{
+    --bg: #12141A;
+    --bg-raised: #1B1E27;
+    --bg-raised-2: #22262F;
+    --line: #2E3340;
+    --amber: #F2A93B;
+    --amber-dim: #8A6425;
+    --teal: #4FD1C5;
+    --rose: #E8697D;
+    --text: #EDEEF2;
+    --text-dim: #9AA0AE;
+    --text-faint: #5D6270;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', Helvetica, Arial, sans-serif;
+    --display: 'Arial Black', 'PingFang TC', var(--sans);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(242,169,59,0.10), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:880px;margin:0 auto;}
+
+  /* header */
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.18em;
+    color:var(--amber);
+    text-transform:uppercase;
+    margin:0 0 6px 2px;
+  }
+  h1{
+    font-family:var(--display);
+    font-weight:900;
+    font-size:clamp(28px,5vw,40px);
+    letter-spacing:-0.01em;
+    margin:0 0 4px;
+    color:var(--text);
+  }
+  .sub{
+    color:var(--text-dim);
+    font-size:14px;
+    margin:0 0 28px 2px;
+  }
+
+  /* selector deck */
+  .deck{
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    display:flex;
+    gap:14px;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    box-shadow: 0 20px 50px -25px rgba(0,0,0,0.6);
+  }
+  .field{flex:1;min-width:150px;}
+  .field label{
+    display:block;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.1em;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  select{
+    appearance:none;
+    -webkit-appearance:none;
+    width:100%;
+    background:var(--bg-raised-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:var(--display);
+    font-weight:900;
+    font-size:22px;
+    padding:14px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--amber) 50%), linear-gradient(135deg, var(--amber) 50%, transparent 50%);
+    background-position: calc(100% - 22px) calc(1.15em), calc(100% - 16px) calc(1.15em);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  select:hover{border-color:var(--amber-dim);}
+  select:focus{outline:none; border-color:var(--amber); box-shadow:0 0 0 3px rgba(242,169,59,0.18);}
+  .vs{
+    font-family:var(--mono);
+    color:var(--text-faint);
+    font-size:13px;
+    padding-bottom:16px;
+    flex:0 0 auto;
+  }
+
+  /* status line */
+  .status{
+    margin-top:16px;
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.04em;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--teal); box-shadow:0 0 8px var(--teal);}
+  .dot.warn{background:var(--amber); box-shadow:0 0 8px var(--amber);}
+  .dot.bad{background:var(--rose); box-shadow:0 0 8px var(--rose);}
+
+  /* results */
+  .results{margin-top:26px;}
+  .same-warning{
+    background:rgba(232,105,125,0.08);
+    border:1px solid rgba(232,105,125,0.35);
+    color:#F1AAB6;
+    border-radius:12px;
+    padding:18px 20px;
+    font-size:14px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media (max-width:640px){ .grid{grid-template-columns:1fr;} }
+
+  .team-card{
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px 18px 8px;
+  }
+  .team-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:12px;
+  }
+  .team-name{
+    font-family:var(--display);
+    font-weight:900;
+    font-size:15px;
+    letter-spacing:0.02em;
+  }
+  .team-name.a{color:var(--teal);}
+  .team-name.b{color:#C9A6F2;}
+  .team-group{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-faint);
+  }
+
+  .role-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 0;
+    border-top:1px solid var(--line);
+    gap:10px;
+  }
+  .role-row:first-of-type{border-top:none;}
+  .role-label{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-faint);
+    width:64px;
+    flex:0 0 auto;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+  }
+  .role-occupant{
+    flex:1;
+    text-align:right;
+  }
+  .name-current{
+    font-family:var(--display);
+    font-weight:900;
+    font-size:18px;
+    color:var(--text);
+  }
+  .name-out{
+    font-family:var(--sans);
+    font-size:12px;
+    color:var(--text-faint);
+    text-decoration:line-through;
+    margin-right:8px;
+  }
+  .arrow{color:var(--text-faint); margin:0 6px; font-size:12px;}
+
+  .tag{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:9.5px;
+    letter-spacing:0.06em;
+    padding:3px 7px;
+    border-radius:99px;
+    margin-left:8px;
+    vertical-align:middle;
+    text-transform:uppercase;
+  }
+  .tag.own{background:rgba(79,209,197,0.14); color:var(--teal); border:1px solid rgba(79,209,197,0.35);}
+  .tag.cross{background:rgba(201,166,242,0.14); color:#C9A6F2; border:1px solid rgba(201,166,242,0.35);}
+  .tag.jane{background:rgba(242,169,59,0.16); color:var(--amber); border:1px solid rgba(242,169,59,0.45);}
+
+  /* avoiding panel */
+  .avoid-panel{
+    margin-top:14px;
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px 20px;
+  }
+  .avoid-title{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.1em;
+    color:var(--text-faint);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .avoid-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .avoid-chip{
+    font-family:var(--sans);
+    font-size:13px;
+    color:var(--text-dim);
+    background:var(--bg-raised-2);
+    border:1px solid var(--line);
+    padding:6px 12px;
+    border-radius:99px;
+  }
+  .avoid-chip b{color:var(--text);}
+  .avoid-empty{color:var(--text-faint); font-size:13px;}
+
+  .footnote{
+    margin-top:18px;
+    font-size:12px;
+    color:var(--text-faint);
+    line-height:1.7;
+  }
+  .footnote code{
+    font-family:var(--mono);
+    background:var(--bg-raised-2);
+    padding:1px 5px;
+    border-radius:4px;
+    color:var(--text-dim);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Backstage / Award Ceremony</p>
+  <h1>頒獎配置台</h1>
+  <p class="sub">選擇本輪上台的兩個組別,立即顯示 A、B 兩隊實際上場名單與遞補狀況。</p>
+
+  <div class="deck">
+    <div class="field">
+      <label for="g1">上台組別 1</label>
+      <select id="g1"></select>
+    </div>
+    <div class="vs">×</div>
+    <div class="field">
+      <label for="g2">上台組別 2</label>
+      <select id="g2"></select>
+    </div>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="results" id="results"></div>
+
+  <p class="footnote">
+    規則:自己的組別只要出現在本輪上台名單中,不論被排去服務哪一組都要迴避上台領獎。
+    拿托盤 / 遞獎需要有人在崗;後勤 <code>Selina</code> / <code>Jaen</code> 只要有一位在場即可,不特別遞補後勤本身空缺。
+    若同時缺人手,由面試組 <code>Jane</code> 機動支援。
+  </p>
+</div>
+
+<script>
+const people = {
+  Harris: { team:'A', group:7, role:'tray',    label:'拿托盤' },
+  Lauren: { team:'A', group:2, role:'present', label:'遞獎'   },
+  Selina: { team:'A', group:4, role:'backup',  label:'後勤'   },
+  Penny:  { team:'B', group:7, role:'tray',    label:'拿托盤' },
+  Libby:  { team:'B', group:1, role:'present', label:'遞獎'   },
+  Jaen:   { team:'B', group:8, role:'backup',  label:'後勤'   },
+};
+const ROLE_ORDER = ['tray','present','backup'];
+const ROLE_LABEL = { tray:'拿托盤', present:'遞獎', backup:'後勤' };
+
+const g1Sel = document.getElementById('g1');
+const g2Sel = document.getElementById('g2');
+const statusEl = document.getElementById('status');
+const resultsEl = document.getElementById('results');
+
+for (let i=1;i<=9;i++){
+  const o1 = document.createElement('option'); o1.value=i; o1.textContent = '第 '+i+' 組';
+  g1Sel.appendChild(o1);
+  const o2 = document.createElement('option'); o2.value=i; o2.textContent = '第 '+i+' 組';
+  g2Sel.appendChild(o2);
+}
+g1Sel.value = 1;
+g2Sel.value = 7;
+
+function computeAssignment(g1, g2){
+  const onstage = new Set([g1, g2]);
+  const vacantNames = Object.keys(people).filter(n => onstage.has(people[n].group));
+  const needFill = vacantNames.filter(n => people[n].role !== 'backup');
+
+  // available backups (their own group not on stage)
+  let subsPool = ['Selina','Jaen'].filter(n => !onstage.has(people[n].group));
+
+  // final occupant per team+role: { A: {tray:{name,status}, present:{...}, backup:{...}}, B:{...} }
+  const board = { A:{}, B:{} };
+  for (const team of ['A','B']){
+    for (const role of ROLE_ORDER){
+      const originalName = Object.keys(people).find(n => people[n].team===team && people[n].role===role);
+      const isVacant = onstage.has(people[originalName].group);
+      board[team][role] = { original: originalName, current: originalName, status: isVacant ? 'vacant' : 'normal', via: null };
+    }
+  }
+
+  let janeUsed = false;
+  const janeSlots = [];
+
+  for (const name of needFill){
+    const p = people[name];
+    const ownBackup = p.team === 'A' ? 'Selina' : 'Jaen';
+    let filler = null, via = null;
+
+    if (subsPool.includes(ownBackup)){
+      filler = ownBackup; via = 'own';
+      subsPool = subsPool.filter(x=>x!==ownBackup);
+    } else {
+      const otherBackup = p.team === 'A' ? 'Jaen' : 'Selina';
+      if (subsPool.includes(otherBackup)){
+        filler = otherBackup; via = 'cross';
+        subsPool = subsPool.filter(x=>x!==otherBackup);
+      } else {
+        filler = 'Jane'; via = 'jane';
+        janeUsed = true;
+        janeSlots.push(p.team+':'+p.role);
+      }
+    }
+    board[p.team][p.role].current = filler;
+    board[p.team][p.role].status = 'filled';
+    board[p.team][p.role].via = via;
+  }
+
+  // 後勤覆蓋:只要 Selina、Jaen 有一位在場就算數。
+  // 若兩位後勤這輪都要迴避(同時上台的兩組正好是他們各自的組別),
+  // 後勤就變成完全沒人,由面試組 Jane 頂上。
+  const availableBackups = ['Selina','Jaen'].filter(n => !onstage.has(people[n].group));
+  if (availableBackups.length === 0){
+    for (const team of ['A','B']){
+      const slot = board[team]['backup'];
+      if (slot.status === 'vacant'){
+        slot.current = 'Jane';
+        slot.status = 'filled';
+        slot.via = 'jane';
+      }
+    }
+    janeUsed = true;
+  }
+
+  return { board, vacantNames, janeUsed };
+}
+
+function render(){
+  const g1 = parseInt(g1Sel.value, 10);
+  const g2 = parseInt(g2Sel.value, 10);
+
+  if (g1 === g2){
+    statusEl.innerHTML = '<span class="dot bad"></span> 兩個組別不能相同';
+    resultsEl.innerHTML = '<div class="same-warning">請選擇兩個不同的組別,才能查詢這一輪的上場配置。</div>';
+    return;
+  }
+
+  const { board, vacantNames, janeUsed } = computeAssignment(g1, g2);
+
+  if (vacantNames.length === 0){
+    statusEl.innerHTML = '<span class="dot"></span> 本輪無人迴避,A、B 隊照原本分工正常上場';
+  } else if (janeUsed){
+    statusEl.innerHTML = '<span class="dot warn"></span> 人力吃緊,已排入面試組 Jane 支援';
+  } else {
+    statusEl.innerHTML = '<span class="dot"></span> 有人迴避,已由後勤補位,運作正常';
+  }
+
+  function teamCard(team, teamLabel, cls, servedGroup){
+    let rows = '';
+    for (const role of ROLE_ORDER){
+      const slot = board[team][role];
+      let occupantHtml = '';
+      if (slot.status === 'normal'){
+        occupantHtml = `<span class="name-current">${slot.current}</span>`;
+      } else if (slot.status === 'vacant'){
+        // backup vacant with nobody needing to fill (role===backup, not in needFill)
+        occupantHtml = `<span class="name-out">${slot.original}</span><span class="arrow">迴避領獎</span>`;
+      } else if (slot.status === 'filled'){
+        const tag = slot.via === 'own' ? '<span class="tag own">本隊後勤</span>'
+                  : slot.via === 'cross' ? '<span class="tag cross">跨隊支援</span>'
+                  : '<span class="tag jane">面試組支援</span>';
+        occupantHtml = `<span class="name-out">${slot.original}</span><span class="arrow">→</span><span class="name-current">${slot.current}</span>${tag}`;
+      }
+      rows += `
+        <div class="role-row">
+          <div class="role-label">${ROLE_LABEL[role]}</div>
+          <div class="role-occupant">${occupantHtml}</div>
+        </div>`;
+    }
+    return `
+      <div class="team-card">
+        <div class="team-head">
+          <span class="team-name ${cls}">${teamLabel}</span>
+          <span class="team-group">負責第 ${servedGroup} 組</span>
+        </div>
+        ${rows}
+      </div>`;
+  }
+
+  const gridHtml = `
+    <div class="grid">
+      ${teamCard('A','A 隊','a', g1)}
+      ${teamCard('B','B 隊','b', g2)}
+    </div>`;
+
+  const avoidChips = vacantNames.length
+    ? vacantNames.map(n => `<span class="avoid-chip"><b>${n}</b> · 第${people[n].group}組</span>`).join('')
+    : '<span class="avoid-empty">本輪無人需要迴避</span>';
+
+  const avoidHtml = `
+    <div class="avoid-panel">
+      <div class="avoid-title">本輪需迴避上台領獎</div>
+      <div class="avoid-list">${avoidChips}</div>
+    </div>`;
+
+  resultsEl.innerHTML = gridHtml + avoidHtml;
+}
+
+g1Sel.addEventListener('change', render);
+g2Sel.addEventListener('change', render);
+render();
+</script>
+</body>
+</html>
