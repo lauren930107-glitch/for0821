@@ -312,18 +312,10 @@ function render(){
   const board = { A: boardA, B: boardB };
 
   function occupantHtml(slot){
-    if (slot.status === 'normal'){
-      return `<span class="name-current">${slot.current}</span>`;
-    } else if (slot.status === 'vacant'){
-      return `<span class="name-out">${slot.original}</span><span class="arrow">迴避</span>`;
-    } else if (slot.status === 'lending'){
-      return `<span class="name-out">${slot.original}</span><span class="arrow">支援其他崗位</span>`;
-    } else if (slot.status === 'unresolved'){
-      return `<span class="name-out">${slot.original}</span><span class="arrow">迴避,尚無人可補</span>`;
-    } else {
-      const tag = slot.via === 'jane' ? '<span class="tag">面試組支援</span>' : '';
-      return `<span class="name-out">${slot.original}</span><span class="arrow">→</span><span class="name-current">${slot.current}</span>${tag}`;
-    }
+    const tag = slot.via === 'jane' ? '<span class="tag">面試組支援</span>' : '';
+    const away = slot.status === 'vacant' || slot.status === 'lending' || slot.status === 'unresolved';
+    const name = away ? '－' : slot.current;
+    return `<span class="name-current">${name}</span>${tag}`;
   }
 
   function teamCard(team, teamLabel, cls){
@@ -372,18 +364,10 @@ function computeSequentialSchedule(order){
 
 function seqItemHtml(slot){
   const label = ROLE_LABEL[slot.__role];
-  if (slot.status === 'normal'){
-    return `<div class="seq-item"><span class="rl">${label}</span>${slot.current}</div>`;
-  } else if (slot.status === 'vacant'){
-    return `<div class="seq-item"><span class="rl">${label}</span><span class="out">${slot.original}</span>迴避</div>`;
-  } else if (slot.status === 'lending'){
-    return `<div class="seq-item"><span class="rl">${label}</span><span class="out">${slot.original}</span>支援其他崗位</div>`;
-  } else if (slot.status === 'unresolved'){
-    return `<div class="seq-item"><span class="rl">${label}</span><span class="out">${slot.original}</span>迴避,尚無人可補</div>`;
-  } else {
-    const tag = slot.via === 'jane' ? ' <span class="tag" style="font-size:9px;">面試組支援</span>' : '';
-    return `<div class="seq-item"><span class="rl">${label}</span><span class="out">${slot.original}</span>→${slot.current}${tag}</div>`;
-  }
+  const away = slot.status === 'vacant' || slot.status === 'lending' || slot.status === 'unresolved';
+  const name = away ? '－' : slot.current;
+  const tag = slot.via === 'jane' ? ' <span class="tag" style="font-size:9px;">面試組支援</span>' : '';
+  return `<div class="seq-item"><span class="rl">${label}</span>${name}${tag}</div>`;
 }
 
 function renderSequential(order){
@@ -397,7 +381,6 @@ function renderSequential(order){
       aItems += seqItemHtml(round.boardA[role]);
       bItems += seqItemHtml(round.boardB[role]);
     }
-    const recipHtml = round.recipients.map(r => `<div class="seq-item"><span class="rl">個人領獎</span><span class="recip">${r}</span></div>`).join('');
     html += `
       <div class="seq-round">
         <div class="seq-head"><span class="seq-num">第 ${idx+1} 棒 · 第 ${round.g} 組</span></div>
@@ -411,7 +394,6 @@ function renderSequential(order){
             ${bItems}
           </div>
         </div>
-        ${recipHtml}
       </div>`;
   });
   seqWrap.innerHTML = html;
