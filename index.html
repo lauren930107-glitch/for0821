@@ -276,14 +276,14 @@ function computeTeam(team, g, restingSet){
 
   let backupUsed = false;
 
-  // 遞獎優先(Jane 不能補遞獎)
+  // 第一輪:遞獎優先用自己隊伍後勤補
   if (needsOut(presentName)){
     if (backupFree && !backupUsed){
       slots.present = { original: presentName, current: backupName, status: 'filled', via: 'own' };
       backupUsed = true;
       slots.backup = { original: backupName, current: backupName, status: 'lending' };
     } else {
-      slots.present = { original: presentName, current: null, status: 'unresolved' };
+      slots.present = { original: presentName, current: null, status: 'pending' };
     }
   } else {
     slots.present = { original: presentName, current: presentName, status: 'normal' };
@@ -295,10 +295,33 @@ function computeTeam(team, g, restingSet){
       backupUsed = true;
       slots.backup = { original: backupName, current: backupName, status: 'lending' };
     } else {
-      slots.tray = { original: trayName, current: 'Jane', status: 'filled', via: 'jane' };
+      slots.tray = { original: trayName, current: null, status: 'pending' };
     }
   } else {
     slots.tray = { original: trayName, current: trayName, status: 'normal' };
+  }
+
+  // 第二輪:誰還沒事就讓誰兼另一邊,同一個人身兼拿托盤+遞獎也沒關係
+  const holderOf = (slot) => (slot.status === 'normal' || slot.status === 'filled') ? slot.current : null;
+
+  if (slots.tray.status === 'pending'){
+    const helper = holderOf(slots.present);
+    if (helper){
+      slots.tray = { original: slots.tray.original, current: helper, status: 'filled', via: 'double' };
+    } else if (team === 'A'){
+      slots.tray = { original: slots.tray.original, current: 'Jane', status: 'filled', via: 'jane' };
+    } else {
+      slots.tray = { original: slots.tray.original, current: null, status: 'unresolved' };
+    }
+  }
+
+  if (slots.present.status === 'pending'){
+    const helper = holderOf(slots.tray);
+    if (helper){
+      slots.present = { original: slots.present.original, current: helper, status: 'filled', via: 'double' };
+    } else {
+      slots.present = { original: slots.present.original, current: null, status: 'unresolved' };
+    }
   }
 
   return slots;
