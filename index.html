@@ -11,6 +11,7 @@
     --bg-raised-2: #22262F;
     --line: #2E3340;
     --amber: #F2A93B;
+    --amber-dim: #8A6425;
     --teal: #4FD1C5;
     --rose: #E8697D;
     --text: #EDEEF2;
@@ -29,12 +30,8 @@
   }
   .wrap{max-width:760px;margin:0 auto;}
 
-  .deck{
-    display:flex;
-    gap:14px;
-    align-items:center;
-  }
-  .field{flex:1;}
+  .deck{display:flex;justify-content:center;}
+  .field{width:220px;}
   select{
     appearance:none;
     -webkit-appearance:none;
@@ -55,23 +52,8 @@
     background-repeat: no-repeat;
   }
   select:focus{outline:none; border-color:var(--amber);}
-  .vs{
-    font-family:var(--display);
-    color:var(--text-faint);
-    font-size:16px;
-    flex:0 0 auto;
-  }
 
   .results{margin-top:20px;}
-  .same-warning{
-    background:rgba(232,105,125,0.08);
-    border:1px solid rgba(232,105,125,0.35);
-    color:#F1AAB6;
-    border-radius:12px;
-    padding:16px 18px;
-    font-size:14px;
-    text-align:center;
-  }
 
   .grid{
     display:grid;
@@ -137,17 +119,77 @@
     color:var(--amber);
     border:1px solid rgba(242,169,59,0.45);
   }
+
+  .mode-toggle{
+    display:flex;
+    justify-content:center;
+    margin-top:18px;
+  }
+  .mode-btn{
+    background:var(--bg-raised-2);
+    border:1px solid var(--line);
+    color:var(--text-faint);
+    font-size:13px;
+    padding:9px 18px;
+    border-radius:99px;
+    cursor:pointer;
+  }
+  .mode-btn:hover{ color:var(--text); border-color:var(--amber-dim); }
+
+  .seq-wrap{margin-top:16px;}
+  .seq-round{
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 18px;
+    margin-bottom:10px;
+  }
+  .seq-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .seq-num{
+    font-family:var(--display);
+    font-weight:900;
+    font-size:16px;
+    color:var(--amber);
+  }
+  .seq-team{
+    display:flex;
+    gap:14px;
+  }
+  .seq-team-block{ flex:1; }
+  .seq-team-label{
+    font-size:11px;
+    font-weight:900;
+    margin-bottom:6px;
+  }
+  .seq-team-label.a{ color:var(--teal); }
+  .seq-team-label.b{ color:#C9A6F2; }
+  .seq-item{
+    font-size:13px;
+    color:var(--text);
+    margin-bottom:3px;
+  }
+  .seq-item .rl{ color:var(--text-faint); margin-right:4px; }
+  .seq-item .out{ color:var(--text-faint); text-decoration:line-through; margin-right:4px; font-size:11px; }
+  .seq-item .recip{ color:var(--teal); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="deck">
     <div class="field"><select id="g1"></select></div>
-    <div class="vs">×</div>
-    <div class="field"><select id="g2"></select></div>
   </div>
 
   <div class="results" id="results"></div>
+
+  <div class="mode-toggle">
+    <button class="mode-btn" id="seqToggle">依序 1→9 組完整排班</button>
+  </div>
+  <div class="seq-wrap" id="seqWrap" style="display:none;"></div>
 </div>
 
 <script>
@@ -163,141 +205,90 @@ const ROLE_ORDER = ['tray','present','backup'];
 const ROLE_LABEL = { tray:'拿托盤', present:'遞獎', backup:'後勤' };
 
 const g1Sel = document.getElementById('g1');
-const g2Sel = document.getElementById('g2');
 const resultsEl = document.getElementById('results');
 
 for (let i=1;i<=9;i++){
   const o1 = document.createElement('option'); o1.value=i; o1.textContent = '第 '+i+' 組';
   g1Sel.appendChild(o1);
 }
-const blankOpt = document.createElement('option');
-blankOpt.value = '';
-blankOpt.textContent = '（單獨頒獎）';
-g2Sel.appendChild(blankOpt);
-for (let i=1;i<=9;i++){
-  const o2 = document.createElement('option'); o2.value=i; o2.textContent = '第 '+i+' 組';
-  g2Sel.appendChild(o2);
-}
 g1Sel.value = 1;
-g2Sel.value = '';
 
-function computeAssignment(g1, g2){
-  const onstage = g2 !== null ? new Set([g1, g2]) : new Set([g1]);
-  const vacantNames = Object.keys(people).filter(n => onstage.has(people[n].group));
-  const needFill = vacantNames.filter(n => people[n].role !== 'backup');
+/* 每次只有一組上台,但 A、B 兩隊同時一起服務這一組,且不能跨隊支援——
+   只能用自己隊伍的後勤補自己隊伍的缺,後勤真的也不在時,拿托盤才由 Jane 支援,
+   遞獎沒人補則誠實顯示未解決。 */
+function computeTeam(team, g, restingSet){
+  restingSet = restingSet || new Set();
+  const trayName = team === 'A' ? 'Harris' : 'Penny';
+  const presentName = team === 'A' ? 'Lauren' : 'Libby';
+  const backupName = team === 'A' ? 'Selina' : 'Jaen';
 
-  let subsPool = ['Selina','Jaen'].filter(n => !onstage.has(people[n].group));
+  const needsOut = (name) => people[name].group === g || restingSet.has(name);
+  const backupFree = !needsOut(backupName);
 
-  const board = { A:{}, B:{} };
-  for (const team of ['A','B']){
-    for (const role of ROLE_ORDER){
-      const originalName = Object.keys(people).find(n => people[n].team===team && people[n].role===role);
-      const isVacant = onstage.has(people[originalName].group);
-      board[team][role] = { original: originalName, current: originalName, status: isVacant ? 'vacant' : 'normal', via: null };
-    }
-  }
+  const slots = {};
+  slots.backup = needsOut(backupName)
+    ? { original: backupName, current: backupName, status: 'vacant' }
+    : { original: backupName, current: backupName, status: 'normal' };
 
-  const pending = [];
+  let backupUsed = false;
 
-  // 遞獎只能靠後勤補(Jane 不支援遞獎),所以優先處理遞獎缺口,
-  // 拿托盤的缺口留到最後,因為拿托盤還有 Jane 這個備援。
-  const presentNeeds = needFill.filter(n => people[n].role === 'present');
-  const trayNeeds = needFill.filter(n => people[n].role === 'tray');
-  const orderedNeeds = [...presentNeeds, ...trayNeeds];
-
-  for (const name of orderedNeeds){
-    const p = people[name];
-    const ownBackup = p.team === 'A' ? 'Selina' : 'Jaen';
-    if (subsPool.includes(ownBackup)){
-      board[p.team][p.role].current = ownBackup;
-      board[p.team][p.role].status = 'filled';
-      board[p.team][p.role].via = 'own';
-      subsPool = subsPool.filter(x=>x!==ownBackup);
+  // 遞獎優先(Jane 不能補遞獎)
+  if (needsOut(presentName)){
+    if (backupFree && !backupUsed){
+      slots.present = { original: presentName, current: backupName, status: 'filled', via: 'own' };
+      backupUsed = true;
+      slots.backup = { original: backupName, current: backupName, status: 'lending' };
     } else {
-      pending.push(name);
+      slots.present = { original: presentName, current: null, status: 'unresolved' };
     }
+  } else {
+    slots.present = { original: presentName, current: presentName, status: 'normal' };
   }
 
-  for (const name of pending.filter(n=>people[n].role==='present').concat(pending.filter(n=>people[n].role==='tray'))){
-    const p = people[name];
-    const otherBackup = p.team === 'A' ? 'Jaen' : 'Selina';
-    if (subsPool.includes(otherBackup)){
-      board[p.team][p.role].current = otherBackup;
-      board[p.team][p.role].status = 'filled';
-      board[p.team][p.role].via = 'cross';
-      subsPool = subsPool.filter(x=>x!==otherBackup);
-    } else if (p.role === 'tray'){
-      // 面試組 Jane 只支援拿托盤,不支援遞獎
-      board[p.team][p.role].current = 'Jane';
-      board[p.team][p.role].status = 'filled';
-      board[p.team][p.role].via = 'jane';
+  if (needsOut(trayName)){
+    if (backupFree && !backupUsed){
+      slots.tray = { original: trayName, current: backupName, status: 'filled', via: 'own' };
+      backupUsed = true;
+      slots.backup = { original: backupName, current: backupName, status: 'lending' };
     } else {
-      // 遞獎缺人時 Jane 不支援,維持原樣標示未解決
-      board[p.team][p.role].status = 'unresolved';
-      board[p.team][p.role].via = 'unresolved';
+      slots.tray = { original: trayName, current: 'Jane', status: 'filled', via: 'jane' };
     }
+  } else {
+    slots.tray = { original: trayName, current: trayName, status: 'normal' };
   }
 
-  for (const team of ['A','B']){
-    const backupSlot = board[team]['backup'];
-    if (backupSlot.status === 'vacant'){
-      const stillActive = Object.keys(people).find(n =>
-        people[n].team === team && people[n].role !== 'backup' && board[team][people[n].role].status === 'normal'
-      );
-      if (stillActive){
-        backupSlot.current = stillActive;
-        backupSlot.status = 'filled';
-        backupSlot.via = 'own';
-      }
-    }
-  }
-
-  const availableBackups = ['Selina','Jaen'].filter(n => !onstage.has(people[n].group));
-  if (availableBackups.length === 0){
-    for (const team of ['A','B']){
-      const slot = board[team]['backup'];
-      if (slot.status === 'vacant'){
-        slot.current = 'Jane';
-        slot.status = 'filled';
-        slot.via = 'jane';
-      }
-    }
-  }
-
-  return { board };
+  return slots;
 }
 
 function render(){
   const g1 = parseInt(g1Sel.value, 10);
-  const g2raw = g2Sel.value;
-  const g2 = g2raw === '' ? null : parseInt(g2raw, 10);
 
-  if (g2 !== null && g1 === g2){
-    resultsEl.innerHTML = '<div class="same-warning">請選擇兩個不同的組別</div>';
-    return;
+  const boardA = computeTeam('A', g1);
+  const boardB = computeTeam('B', g1);
+  const board = { A: boardA, B: boardB };
+
+  function occupantHtml(slot){
+    if (slot.status === 'normal'){
+      return `<span class="name-current">${slot.current}</span>`;
+    } else if (slot.status === 'vacant'){
+      return `<span class="name-out">${slot.original}</span><span class="arrow">迴避</span>`;
+    } else if (slot.status === 'lending'){
+      return `<span class="name-out">${slot.original}</span><span class="arrow">支援其他崗位</span>`;
+    } else if (slot.status === 'unresolved'){
+      return `<span class="name-out">${slot.original}</span><span class="arrow">迴避,尚無人可補</span>`;
+    } else {
+      const tag = slot.via === 'jane' ? '<span class="tag">面試組支援</span>' : '';
+      return `<span class="name-out">${slot.original}</span><span class="arrow">→</span><span class="name-current">${slot.current}</span>${tag}`;
+    }
   }
-
-  const { board } = computeAssignment(g1, g2);
 
   function teamCard(team, teamLabel, cls){
     let rows = '';
     for (const role of ROLE_ORDER){
-      const slot = board[team][role];
-      let occupantHtml = '';
-      if (slot.status === 'normal'){
-        occupantHtml = `<span class="name-current">${slot.current}</span>`;
-      } else if (slot.status === 'vacant'){
-        occupantHtml = `<span class="name-out">${slot.original}</span><span class="arrow">迴避</span>`;
-      } else if (slot.status === 'unresolved'){
-        occupantHtml = `<span class="name-out">${slot.original}</span><span class="arrow">迴避,尚無人可補</span>`;
-      } else {
-        const tag = slot.via === 'jane' ? '<span class="tag">面試組支援</span>' : '';
-        occupantHtml = `<span class="name-out">${slot.original}</span><span class="arrow">→</span><span class="name-current">${slot.current}</span>${tag}`;
-      }
       rows += `
         <div class="role-row">
           <div class="role-label">${ROLE_LABEL[role]}</div>
-          <div class="role-occupant">${occupantHtml}</div>
+          <div class="role-occupant">${occupantHtml(board[team][role])}</div>
         </div>`;
     }
     return `
@@ -305,18 +296,6 @@ function render(){
         <div class="team-name ${cls}">${teamLabel}</div>
         ${rows}
       </div>`;
-  }
-
-  if (g2 === null){
-    // 單獨頒獎:只有一組上台,挑一隊去負責,優先挑完全沒人異動的那隊
-    const onstage = new Set([g1]);
-    const conflictA = Object.keys(people).some(n => people[n].team==='A' && people[n].group===g1);
-    const conflictB = Object.keys(people).some(n => people[n].team==='B' && people[n].group===g1);
-    const chosen = !conflictA ? 'A' : (!conflictB ? 'B' : 'B');
-    const label = chosen === 'A' ? 'A 隊' : 'B 隊';
-    const cls = chosen === 'A' ? 'a' : 'b';
-    resultsEl.innerHTML = `<div class="grid" style="grid-template-columns:1fr;max-width:360px;margin:0 auto;">${teamCard(chosen, label, cls)}</div>`;
-    return;
   }
 
   resultsEl.innerHTML = `
@@ -327,8 +306,93 @@ function render(){
 }
 
 g1Sel.addEventListener('change', render);
-g2Sel.addEventListener('change', render);
 render();
+
+/* ---------- 依序 1→9 組完整排班(循環模式) ---------- */
+
+function computeSequentialSchedule(){
+  const order = [1,2,3,4,5,6,7,8,9];
+  let resting = new Set();
+  const schedule = [];
+
+  for (const g of order){
+    const boardA = computeTeam('A', g, resting);
+    const boardB = computeTeam('B', g, resting);
+
+    const recipients = Object.keys(people).filter(n => people[n].group === g);
+    schedule.push({ g, boardA, boardB, recipients });
+
+    resting = new Set(recipients.filter(n => people[n].role === 'tray' || people[n].role === 'present'));
+  }
+  return schedule;
+}
+
+function seqItemHtml(slot){
+  const label = ROLE_LABEL[slot.__role];
+  if (slot.status === 'normal'){
+    return `<div class="seq-item"><span class="rl">${label}</span>${slot.current}</div>`;
+  } else if (slot.status === 'vacant'){
+    return `<div class="seq-item"><span class="rl">${label}</span><span class="out">${slot.original}</span>迴避</div>`;
+  } else if (slot.status === 'lending'){
+    return `<div class="seq-item"><span class="rl">${label}</span><span class="out">${slot.original}</span>支援其他崗位</div>`;
+  } else if (slot.status === 'unresolved'){
+    return `<div class="seq-item"><span class="rl">${label}</span><span class="out">${slot.original}</span>迴避,尚無人可補</div>`;
+  } else {
+    const tag = slot.via === 'jane' ? ' <span class="tag" style="font-size:9px;">面試組支援</span>' : '';
+    return `<div class="seq-item"><span class="rl">${label}</span><span class="out">${slot.original}</span>→${slot.current}${tag}</div>`;
+  }
+}
+
+function renderSequential(){
+  const schedule = computeSequentialSchedule();
+  let html = '';
+  for (const round of schedule){
+    let aItems = '', bItems = '';
+    for (const role of ROLE_ORDER){
+      round.boardA[role].__role = role;
+      round.boardB[role].__role = role;
+      aItems += seqItemHtml(round.boardA[role]);
+      bItems += seqItemHtml(round.boardB[role]);
+    }
+    const recipHtml = round.recipients.map(r => `<div class="seq-item"><span class="rl">個人領獎</span><span class="recip">${r}</span></div>`).join('');
+    html += `
+      <div class="seq-round">
+        <div class="seq-head"><span class="seq-num">第 ${round.g} 組</span></div>
+        <div class="seq-team">
+          <div class="seq-team-block">
+            <div class="seq-team-label a">A隊</div>
+            ${aItems}
+          </div>
+          <div class="seq-team-block">
+            <div class="seq-team-label b">B隊</div>
+            ${bItems}
+          </div>
+        </div>
+        ${recipHtml}
+      </div>`;
+  }
+  seqWrap.innerHTML = html;
+}
+
+const seqToggle = document.getElementById('seqToggle');
+const seqWrap = document.getElementById('seqWrap');
+const deckEl = document.querySelector('.deck');
+let seqMode = false;
+seqToggle.addEventListener('click', () => {
+  seqMode = !seqMode;
+  if (seqMode){
+    deckEl.style.display = 'none';
+    resultsEl.style.display = 'none';
+    seqWrap.style.display = 'block';
+    seqToggle.textContent = '回到單組查詢';
+    renderSequential();
+  } else {
+    deckEl.style.display = 'flex';
+    resultsEl.style.display = 'block';
+    seqWrap.style.display = 'none';
+    seqToggle.textContent = '依序 1→9 組完整排班';
+  }
+});
 </script>
 </body>
 </html>
