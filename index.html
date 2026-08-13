@@ -173,9 +173,48 @@
     color:var(--text);
     margin-bottom:3px;
   }
-  .seq-item .rl{ color:var(--text-faint); margin-right:4px; }
-  .seq-item .out{ color:var(--text-faint); text-decoration:line-through; margin-right:4px; font-size:11px; }
-  .seq-item .recip{ color:var(--teal); }
+  .order-box{
+    margin-top:18px;
+    background:var(--bg-raised);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+  }
+  .order-box label{
+    display:block;
+    font-size:12px;
+    color:var(--text-faint);
+    margin-bottom:8px;
+  }
+  .order-row{
+    display:flex;
+    gap:10px;
+  }
+  .order-row input{
+    flex:1;
+    background:var(--bg-raised-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-size:16px;
+    padding:12px 14px;
+    border-radius:10px;
+  }
+  .order-row input:focus{outline:none; border-color:var(--amber);}
+  .order-row button{
+    background:var(--amber);
+    color:#1a1300;
+    font-weight:900;
+    border:none;
+    padding:0 20px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  .order-error{
+    color:var(--rose);
+    font-size:12px;
+    margin-top:8px;
+  }
 </style>
 </head>
 <body>
@@ -186,10 +225,15 @@
 
   <div class="results" id="results"></div>
 
-  <div class="mode-toggle">
-    <button class="mode-btn" id="seqToggle">依序 1→9 組完整排班</button>
+  <div class="order-box">
+    <label>輸入頒獎順序(用逗號分隔組別,例如:3,1,5,2,4,7,6,8,9)</label>
+    <div class="order-row">
+      <input id="orderInput" type="text" placeholder="3,1,5,2,4,7,6,8,9">
+      <button id="orderBtn">產生排班</button>
+    </div>
+    <div class="order-error" id="orderError"></div>
   </div>
-  <div class="seq-wrap" id="seqWrap" style="display:none;"></div>
+  <div class="seq-wrap" id="seqWrap"></div>
 </div>
 
 <script>
@@ -310,8 +354,7 @@ render();
 
 /* ---------- 依序 1→9 組完整排班(循環模式) ---------- */
 
-function computeSequentialSchedule(){
-  const order = [1,2,3,4,5,6,7,8,9];
+function computeSequentialSchedule(order){
   let resting = new Set();
   const schedule = [];
 
@@ -343,10 +386,10 @@ function seqItemHtml(slot){
   }
 }
 
-function renderSequential(){
-  const schedule = computeSequentialSchedule();
+function renderSequential(order){
+  const schedule = computeSequentialSchedule(order);
   let html = '';
-  for (const round of schedule){
+  schedule.forEach((round, idx) => {
     let aItems = '', bItems = '';
     for (const role of ROLE_ORDER){
       round.boardA[role].__role = role;
@@ -357,7 +400,7 @@ function renderSequential(){
     const recipHtml = round.recipients.map(r => `<div class="seq-item"><span class="rl">個人領獎</span><span class="recip">${r}</span></div>`).join('');
     html += `
       <div class="seq-round">
-        <div class="seq-head"><span class="seq-num">第 ${round.g} 組</span></div>
+        <div class="seq-head"><span class="seq-num">第 ${idx+1} 棒 · 第 ${round.g} 組</span></div>
         <div class="seq-team">
           <div class="seq-team-block">
             <div class="seq-team-label a">A隊</div>
@@ -370,28 +413,39 @@ function renderSequential(){
         </div>
         ${recipHtml}
       </div>`;
-  }
+  });
   seqWrap.innerHTML = html;
 }
 
-const seqToggle = document.getElementById('seqToggle');
+const orderInput = document.getElementById('orderInput');
+const orderBtn = document.getElementById('orderBtn');
+const orderError = document.getElementById('orderError');
 const seqWrap = document.getElementById('seqWrap');
-const deckEl = document.querySelector('.deck');
-let seqMode = false;
-seqToggle.addEventListener('click', () => {
-  seqMode = !seqMode;
-  if (seqMode){
-    deckEl.style.display = 'none';
-    resultsEl.style.display = 'none';
-    seqWrap.style.display = 'block';
-    seqToggle.textContent = '回到單組查詢';
-    renderSequential();
-  } else {
-    deckEl.style.display = 'flex';
-    resultsEl.style.display = 'block';
-    seqWrap.style.display = 'none';
-    seqToggle.textContent = '依序 1→9 組完整排班';
+
+function parseOrder(text){
+  const parts = text.split(/[,、\s]+/).map(s=>s.trim()).filter(s=>s.length>0);
+  const nums = [];
+  for (const p of parts){
+    const n = parseInt(p, 10);
+    if (isNaN(n) || n < 1 || n > 9 || String(n) !== p) return null;
+    nums.push(n);
   }
+  return nums.length ? nums : null;
+}
+
+orderBtn.addEventListener('click', () => {
+  const order = parseOrder(orderInput.value);
+  if (!order){
+    orderError.textContent = '請輸入 1~9 的組別數字,用逗號分隔';
+    seqWrap.innerHTML = '';
+    return;
+  }
+  orderError.textContent = '';
+  renderSequential(order);
+});
+
+orderInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') orderBtn.click();
 });
 </script>
 </body>
