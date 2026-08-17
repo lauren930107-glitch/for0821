@@ -11,7 +11,6 @@
     --bg-raised-2: #22262F;
     --line: #2E3340;
     --amber: #F2A93B;
-    --amber-dim: #8A6425;
     --teal: #4FD1C5;
     --rose: #E8697D;
     --text: #EDEEF2;
@@ -30,111 +29,59 @@
   }
   .wrap{max-width:760px;margin:0 auto;}
 
-  .deck{display:flex;justify-content:center;}
-  .field{width:220px;}
-  select{
-    appearance:none;
-    -webkit-appearance:none;
-    width:100%;
-    background:var(--bg-raised-2);
-    border:1px solid var(--line);
-    color:var(--text);
-    font-family:var(--display);
-    font-weight:900;
-    font-size:24px;
-    text-align:center;
-    padding:16px;
-    border-radius:12px;
-    cursor:pointer;
-    background-image: linear-gradient(45deg, transparent 50%, var(--amber) 50%), linear-gradient(135deg, var(--amber) 50%, transparent 50%);
-    background-position: calc(100% - 22px) calc(1.15em), calc(100% - 16px) calc(1.15em);
-    background-size: 6px 6px, 6px 6px;
-    background-repeat: no-repeat;
-  }
-  select:focus{outline:none; border-color:var(--amber);}
-
-  .results{margin-top:20px;}
-
-  .grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:14px;
-  }
-  @media (max-width:560px){ .grid{grid-template-columns:1fr;} }
-
-  .team-card{
+  .input-box{
     background:var(--bg-raised);
     border:1px solid var(--line);
     border-radius:14px;
-    padding:6px 18px;
+    padding:18px 20px;
   }
-  .team-name{
-    font-family:var(--display);
-    font-weight:900;
-    font-size:14px;
-    padding-top:14px;
-  }
-  .team-name.a{color:var(--teal);}
-  .team-name.b{color:#C9A6F2;}
-
-  .role-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:12px 0;
-    border-top:1px solid var(--line);
-    gap:10px;
-  }
-  .role-label{
+  .input-box label{
+    display:block;
     font-size:12px;
     color:var(--text-faint);
-    flex:0 0 auto;
+    margin-bottom:10px;
   }
-  .role-occupant{
+  .input-row{ display:flex; gap:10px; }
+  .input-row input{
     flex:1;
-    text-align:right;
+    background:var(--bg-raised-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-size:16px;
+    padding:13px 14px;
+    border-radius:10px;
   }
-  .name-current{
+  .input-row input:focus{outline:none; border-color:var(--amber);}
+  .input-row button{
+    background:var(--amber);
+    color:#1a1300;
+    font-weight:900;
+    border:none;
+    padding:0 22px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  .error{ color:var(--rose); font-size:12px; margin-top:8px; }
+
+  .order-strip{
+    margin-top:16px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .order-chip{
     font-family:var(--display);
     font-weight:900;
-    font-size:19px;
-    color:var(--text);
-  }
-  .name-out{
-    font-size:12px;
-    color:var(--text-faint);
-    text-decoration:line-through;
-    margin-right:6px;
-  }
-  .arrow{color:var(--text-faint); margin:0 4px; font-size:12px;}
-
-  .tag{
-    display:inline-block;
-    font-size:10px;
-    padding:3px 8px;
-    border-radius:99px;
-    margin-left:8px;
-    vertical-align:middle;
-    background:rgba(242,169,59,0.16);
-    color:var(--amber);
-    border:1px solid rgba(242,169,59,0.45);
-  }
-
-  .mode-toggle{
-    display:flex;
-    justify-content:center;
-    margin-top:18px;
-  }
-  .mode-btn{
+    font-size:13px;
     background:var(--bg-raised-2);
     border:1px solid var(--line);
     color:var(--text-faint);
-    font-size:13px;
-    padding:9px 18px;
+    padding:6px 12px;
     border-radius:99px;
-    cursor:pointer;
   }
-  .mode-btn:hover{ color:var(--text); border-color:var(--amber-dim); }
+  .order-chip .n{ color:var(--amber); margin-right:4px; }
+  .order-chip.champ{ color:var(--amber); border-color:var(--amber); }
 
   .seq-wrap{margin-top:16px;}
   .seq-round{
@@ -156,83 +103,43 @@
     font-size:16px;
     color:var(--amber);
   }
-  .seq-team{
-    display:flex;
-    gap:14px;
-  }
-  .seq-team-block{ flex:1; }
-  .seq-team-label{
+  .seq-rank{
     font-size:11px;
-    font-weight:900;
-    margin-bottom:6px;
+    color:var(--text-faint);
   }
+  .seq-team{ display:flex; gap:14px; }
+  .seq-team-block{ flex:1; }
+  .seq-team-label{ font-size:11px; font-weight:900; margin-bottom:6px; }
   .seq-team-label.a{ color:var(--teal); }
   .seq-team-label.b{ color:#C9A6F2; }
-  .seq-item{
-    font-size:13px;
-    color:var(--text);
-    margin-bottom:3px;
-  }
-  .order-box{
-    margin-top:18px;
-    background:var(--bg-raised);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:16px 18px;
-  }
-  .order-box label{
-    display:block;
-    font-size:12px;
-    color:var(--text-faint);
-    margin-bottom:8px;
-  }
-  .order-row{
-    display:flex;
-    gap:10px;
-  }
-  .order-row input{
-    flex:1;
-    background:var(--bg-raised-2);
-    border:1px solid var(--line);
-    color:var(--text);
-    font-size:16px;
-    padding:12px 14px;
-    border-radius:10px;
-  }
-  .order-row input:focus{outline:none; border-color:var(--amber);}
-  .order-row button{
-    background:var(--amber);
-    color:#1a1300;
-    font-weight:900;
-    border:none;
-    padding:0 20px;
-    border-radius:10px;
-    cursor:pointer;
-    font-size:14px;
-  }
-  .order-error{
-    color:var(--rose);
-    font-size:12px;
-    margin-top:8px;
+  .seq-item{ font-size:13px; color:var(--text); margin-bottom:3px; }
+  .seq-item .rl{ color:var(--text-faint); margin-right:4px; }
+  .tag{
+    display:inline-block;
+    font-size:9px;
+    padding:2px 7px;
+    border-radius:99px;
+    margin-left:6px;
+    vertical-align:middle;
+    background:rgba(242,169,59,0.16);
+    color:var(--amber);
+    border:1px solid rgba(242,169,59,0.45);
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="deck">
-    <div class="field"><select id="g1"></select></div>
-  </div>
 
-  <div class="results" id="results"></div>
-
-  <div class="order-box">
-    <label>輸入頒獎順序(用逗號分隔組別,例如:3,1,5,2,4,7,6,8,9)</label>
-    <div class="order-row">
-      <input id="orderInput" type="text" placeholder="3,1,5,2,4,7,6,8,9">
-      <button id="orderBtn">產生排班</button>
+  <div class="input-box">
+    <label>依名次輸入組別(第1名→最後一名),用逗號分隔,例如:3,7,1,9,5,2,8,4,6</label>
+    <div class="input-row">
+      <input id="rankInput" type="text" placeholder="3,7,1,9,5,2,8,4,6">
+      <button id="genBtn">產生</button>
     </div>
-    <div class="order-error" id="orderError"></div>
+    <div class="error" id="err"></div>
   </div>
+
+  <div id="orderStrip" class="order-strip"></div>
   <div class="seq-wrap" id="seqWrap"></div>
 </div>
 
@@ -248,60 +155,48 @@ const people = {
 const ROLE_ORDER = ['tray','present','backup'];
 const ROLE_LABEL = { tray:'拿托盤', present:'遞獎', backup:'後勤' };
 
-const g1Sel = document.getElementById('g1');
-const resultsEl = document.getElementById('results');
-
-for (let i=1;i<=9;i++){
-  const o1 = document.createElement('option'); o1.value=i; o1.textContent = '第 '+i+' 組';
-  g1Sel.appendChild(o1);
-}
-g1Sel.value = 1;
-
-/* 每次只有一組上台,但 A、B 兩隊同時一起服務這一組,且不能跨隊支援——
-   只能用自己隊伍的後勤補自己隊伍的缺,後勤真的也不在時,拿托盤才由 Jane 支援,
-   遞獎沒人補則誠實顯示未解決。 */
-function computeTeam(team, g, restingSet){
-  restingSet = restingSet || new Set();
+/* 每次只有一組上台,A、B 兩隊同時一起服務,不能跨隊支援。
+   缺人時:自己隊伍後勤優先補;後勤也不在,看隊上還有沒有其他沒被拉走的人可以兼；
+   真的整隊都被拉走,拿托盤才由 Jane(僅限A隊)支援,遞獎沒人補就顯示沒人。 */
+/* 只看「當下這組」有沒有撞到自己組別,撞到才迴避;不管前一輪是誰。
+   自己隊伍後勤補自己隊伍的缺;後勤也撞到,看隊上還有沒有人能兼;
+   真的沒人,拿托盤才由 Jane(僅限A隊)頂上,遞獎沒人就沒人。 */
+function computeTeam(team, g){
   const trayName = team === 'A' ? 'Harris' : 'Penny';
   const presentName = team === 'A' ? 'Lauren' : 'Libby';
   const backupName = team === 'A' ? 'Selina' : 'Jaen';
 
-  const needsOut = (name) => people[name].group === g || restingSet.has(name);
-  const backupFree = !needsOut(backupName);
+  const hardTray = people[trayName].group === g;
+  const hardPresent = people[presentName].group === g;
+  const hardBackup = people[backupName].group === g;
 
-  const slots = {};
-  slots.backup = needsOut(backupName)
-    ? { original: backupName, current: backupName, status: 'vacant' }
-    : { original: backupName, current: backupName, status: 'normal' };
+  const slots = {
+    tray:    { original: trayName,    current: trayName,    status: 'normal' },
+    present: { original: presentName, current: presentName, status: 'normal' },
+    backup:  { original: backupName,  current: backupName,  status: hardBackup ? 'vacant' : 'normal' },
+  };
 
-  let backupUsed = false;
+  let backupUsed = hardBackup;
 
-  // 第一輪:遞獎優先用自己隊伍後勤補
-  if (needsOut(presentName)){
-    if (backupFree && !backupUsed){
+  if (hardPresent){
+    if (!backupUsed){
       slots.present = { original: presentName, current: backupName, status: 'filled', via: 'own' };
       backupUsed = true;
       slots.backup = { original: backupName, current: backupName, status: 'lending' };
     } else {
       slots.present = { original: presentName, current: null, status: 'pending' };
     }
-  } else {
-    slots.present = { original: presentName, current: presentName, status: 'normal' };
   }
-
-  if (needsOut(trayName)){
-    if (backupFree && !backupUsed){
+  if (hardTray){
+    if (!backupUsed){
       slots.tray = { original: trayName, current: backupName, status: 'filled', via: 'own' };
       backupUsed = true;
       slots.backup = { original: backupName, current: backupName, status: 'lending' };
     } else {
       slots.tray = { original: trayName, current: null, status: 'pending' };
     }
-  } else {
-    slots.tray = { original: trayName, current: trayName, status: 'normal' };
   }
 
-  // 第二輪:誰還沒事就讓誰兼另一邊,同一個人身兼拿托盤+遞獎也沒關係
   const holderOf = (slot) => (slot.status === 'normal' || slot.status === 'filled') ? slot.current : null;
 
   if (slots.tray.status === 'pending'){
@@ -327,107 +222,29 @@ function computeTeam(team, g, restingSet){
   return slots;
 }
 
-function render(){
-  const g1 = parseInt(g1Sel.value, 10);
+function computeSchedule(order){
+  return order.map(g => ({
+    g,
+    boardA: computeTeam('A', g),
+    boardB: computeTeam('B', g),
+  }));
+}
 
-  const boardA = computeTeam('A', g1);
-  const boardB = computeTeam('B', g1);
-  const board = { A: boardA, B: boardB };
-
-  function occupantHtml(slot){
-    const tag = slot.via === 'jane' ? '<span class="tag">面試組支援</span>' : '';
-    const away = slot.status === 'vacant' || slot.status === 'lending' || slot.status === 'unresolved';
-    const name = away ? '－' : slot.current;
-    return `<span class="name-current">${name}</span>${tag}`;
-  }
-
-  function teamCard(team, teamLabel, cls){
-    let rows = '';
-    for (const role of ROLE_ORDER){
-      rows += `
-        <div class="role-row">
-          <div class="role-label">${ROLE_LABEL[role]}</div>
-          <div class="role-occupant">${occupantHtml(board[team][role])}</div>
-        </div>`;
+function activeNames(board){
+  const names = [];
+  for (const role of ['tray','present','backup']){
+    const s = board[role];
+    if ((s.status === 'normal' || s.status === 'filled') && !names.includes(s.current)){
+      names.push(s.current);
     }
-    return `
-      <div class="team-card">
-        <div class="team-name ${cls}">${teamLabel}</div>
-        ${rows}
-      </div>`;
-  }
-
-  resultsEl.innerHTML = `
-    <div class="grid">
-      ${teamCard('A','A 隊','a')}
-      ${teamCard('B','B 隊','b')}
-    </div>`;
-}
-
-g1Sel.addEventListener('change', render);
-render();
-
-/* ---------- 依序 1→9 組完整排班(循環模式) ---------- */
-
-function computeSequentialSchedule(order){
-  let resting = new Set();
-  const schedule = [];
-
-  for (const g of order){
-    const boardA = computeTeam('A', g, resting);
-    const boardB = computeTeam('B', g, resting);
-
-    const recipients = Object.keys(people).filter(n => people[n].group === g);
-    schedule.push({ g, boardA, boardB, recipients });
-
-    resting = new Set(recipients.filter(n => people[n].role === 'tray' || people[n].role === 'present'));
-  }
-  return schedule;
-}
-
-function seqItemHtml(slot){
-  const label = ROLE_LABEL[slot.__role];
-  const away = slot.status === 'vacant' || slot.status === 'lending' || slot.status === 'unresolved';
-  const name = away ? '－' : slot.current;
-  const tag = slot.via === 'jane' ? ' <span class="tag" style="font-size:9px;">面試組支援</span>' : '';
-  return `<div class="seq-item"><span class="rl">${label}</span>${name}${tag}</div>`;
-}
-
-function renderSequential(order){
-  const schedule = computeSequentialSchedule(order);
-  let html = '';
-  schedule.forEach((round, idx) => {
-    let aItems = '', bItems = '';
-    for (const role of ROLE_ORDER){
-      round.boardA[role].__role = role;
-      round.boardB[role].__role = role;
-      aItems += seqItemHtml(round.boardA[role]);
-      bItems += seqItemHtml(round.boardB[role]);
+    if (s.via === 'jane' && !names.includes('Jane')){
+      names.push('Jane');
     }
-    html += `
-      <div class="seq-round">
-        <div class="seq-head"><span class="seq-num">第 ${idx+1} 棒 · 第 ${round.g} 組</span></div>
-        <div class="seq-team">
-          <div class="seq-team-block">
-            <div class="seq-team-label a">A隊</div>
-            ${aItems}
-          </div>
-          <div class="seq-team-block">
-            <div class="seq-team-label b">B隊</div>
-            ${bItems}
-          </div>
-        </div>
-      </div>`;
-  });
-  seqWrap.innerHTML = html;
+  }
+  return names;
 }
 
-const orderInput = document.getElementById('orderInput');
-const orderBtn = document.getElementById('orderBtn');
-const orderError = document.getElementById('orderError');
-const seqWrap = document.getElementById('seqWrap');
-
-function parseOrder(text){
+function parseRankInput(text){
   const parts = text.split(/[,、\s]+/).map(s=>s.trim()).filter(s=>s.length>0);
   const nums = [];
   for (const p of parts){
@@ -438,20 +255,54 @@ function parseOrder(text){
   return nums.length ? nums : null;
 }
 
-orderBtn.addEventListener('click', () => {
-  const order = parseOrder(orderInput.value);
-  if (!order){
-    orderError.textContent = '請輸入 1~9 的組別數字,用逗號分隔';
+const rankInput = document.getElementById('rankInput');
+const genBtn = document.getElementById('genBtn');
+const errEl = document.getElementById('err');
+const orderStrip = document.getElementById('orderStrip');
+const seqWrap = document.getElementById('seqWrap');
+
+function render(){
+  const ranked = parseRankInput(rankInput.value); // 第1名 → 最後一名
+  if (!ranked){
+    errEl.textContent = '請輸入 1~9 的組別數字,用逗號分隔,依名次由高到低排列';
+    orderStrip.innerHTML = '';
     seqWrap.innerHTML = '';
     return;
   }
-  orderError.textContent = '';
-  renderSequential(order);
-});
+  errEl.textContent = '';
 
-orderInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') orderBtn.click();
-});
+  const announceOrder = [...ranked].reverse(); // 倒序公布:最後一名先頒,冠軍壓軸
+
+  orderStrip.innerHTML = announceOrder.map((g, i) => {
+    const isChamp = i === announceOrder.length - 1;
+    return `<span class="order-chip${isChamp?' champ':''}"><span class="n">${i+1}</span>第${g}組</span>`;
+  }).join('');
+
+  const schedule = computeSchedule(announceOrder);
+  let html = '';
+  schedule.forEach((round, idx) => {
+    const aNames = activeNames(round.boardA).join('、');
+    const bNames = activeNames(round.boardB).join('、');
+    html += `
+      <div class="seq-round">
+        <div class="seq-head"><span class="seq-num">第 ${idx+1} 棒 · 第 ${round.g} 組</span></div>
+        <div class="seq-team">
+          <div class="seq-team-block">
+            <div class="seq-team-label a">A隊</div>
+            <div class="seq-item">${aNames}</div>
+          </div>
+          <div class="seq-team-block">
+            <div class="seq-team-label b">B隊</div>
+            <div class="seq-item">${bNames}</div>
+          </div>
+        </div>
+      </div>`;
+  });
+  seqWrap.innerHTML = html;
+}
+
+genBtn.addEventListener('click', render);
+rankInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') render(); });
 </script>
 </body>
 </html>
